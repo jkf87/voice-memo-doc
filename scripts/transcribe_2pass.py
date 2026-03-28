@@ -27,7 +27,7 @@ from pathlib import Path
 import numpy as np
 import soundfile as sf
 
-DEFAULT_MODEL = "mlx-community/whisper-small-mlx"
+DEFAULT_MODEL = "mlx-community/whisper-turbo"
 SAMPLE_RATE = 16000
 
 

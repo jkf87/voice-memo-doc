@@ -85,11 +85,21 @@ AI 에이전트가 Step 2의 6-agent 역할을 수행합니다. 스크립트는 
 | `benchmark_stt.py` | CER/WER 벤치마크 (SRT ground truth 비교) |
 | `setup.sh` | 의존성 설치 (`--yes` 비대화 모드) |
 
+## Models
+
+기본: `mlx-community/whisper-turbo` (809M, 정확도 우선)
+
+```bash
+# 저사양 Mac에서 small 모델 사용
+python3 scripts/transcribe_2pass.py --input audio.wav --pass 1 --model mlx-community/whisper-small-mlx
+```
+
 ## Requirements
 
 - Apple Silicon Mac (M1+)
 - Python 3.9+
 - macOS 13+
+- Disk: ~1.5GB (turbo model cache)
 
 ## References
 

@@ -106,8 +106,20 @@ Critical rules for generating the initial_prompt (from paper findings):
 
 - `references/setup-guide.md` — BlackHole setup for system audio capture, troubleshooting
 
+## Models
+
+기본 모델: `mlx-community/whisper-turbo` (809M, ~1.5GB VRAM)
+
+| Model | Size | Speed | Accuracy | Use Case |
+|-------|------|-------|----------|----------|
+| `mlx-community/whisper-turbo` | 809M | ~1s/3s chunk | Best | 기본 (권장) |
+| `mlx-community/whisper-small-mlx` | 244M | ~0.3s/3s chunk | Good | 저사양 Mac |
+
+모델 변경: `--model mlx-community/whisper-small-mlx`
+
 ## Requirements
 
 - Apple Silicon Mac (M1/M2/M3/M4)
 - Python 3.9+
 - `mlx-whisper`, `sounddevice`, `soundfile`, `portaudio`
+- Disk: ~1.5GB (turbo model cache)
