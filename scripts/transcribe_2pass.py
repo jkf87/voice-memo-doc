@@ -60,7 +60,7 @@ def load_audio(path, sr=SAMPLE_RATE):
 
 
 def transcribe(audio, model=DEFAULT_MODEL, language="auto", initial_prompt=None,
-               condition_on_previous_text=True):
+               condition_on_previous_text=True, timestamps=False):
     """Run Whisper MLX transcription."""
     from mlx_whisper import transcribe as mlx_transcribe
 
@@ -69,6 +69,8 @@ def transcribe(audio, model=DEFAULT_MODEL, language="auto", initial_prompt=None,
         kwargs["language"] = language
     if initial_prompt:
         kwargs["initial_prompt"] = initial_prompt
+    if timestamps:
+        kwargs["word_timestamps"] = True
 
     t0 = time.time()
     result = mlx_transcribe(
@@ -87,7 +89,7 @@ def transcribe(audio, model=DEFAULT_MODEL, language="auto", initial_prompt=None,
     detected_lang = result.get("language", "")
     duration = len(audio) / SAMPLE_RATE
 
-    return {
+    out = {
         "text": text,
         "language": detected_lang,
         "duration_sec": round(duration, 1),
@@ -95,6 +97,18 @@ def transcribe(audio, model=DEFAULT_MODEL, language="auto", initial_prompt=None,
         "rtf": round(duration / elapsed, 1) if elapsed > 0 else 0,
         "model": model,
     }
+
+    if timestamps and "segments" in result:
+        out["segments"] = [
+            {
+                "start": round(s["start"], 2),
+                "end": round(s["end"], 2),
+                "text": s["text"].strip(),
+            }
+            for s in result["segments"]
+        ]
+
+    return out
 
 
 def main():
@@ -109,9 +123,15 @@ def main():
                        help="Read initial prompt from file")
     parser.add_argument("--model", "-m", default=DEFAULT_MODEL, help="Whisper model")
     parser.add_argument("--language", "-l", default="auto", help="Language code")
-    parser.add_argument("--output", "-o", default=None, help="Output file (json or txt)")
+    parser.add_argument("--output", "-o", default=None, help="Output file (json, txt, or srt)")
     parser.add_argument("--json", action="store_true", help="JSON output")
+    parser.add_argument("--timestamps", "-t", action="store_true",
+                       help="Include segment timestamps (adds 'segments' to output)")
+    parser.add_argument("--srt", action="store_true",
+                       help="Output in SRT subtitle format (implies --timestamps)")
     args = parser.parse_args()
+    if args.srt:
+        args.timestamps = True
 
     audio = load_audio(args.input)
     print(f"Audio: {len(audio)/SAMPLE_RATE:.1f}s", file=sys.stderr)
@@ -120,7 +140,8 @@ def main():
         # Pass 1: Draft transcription (no prompt, fast)
         print("=== Pass 1: Draft transcription ===", file=sys.stderr)
         result = transcribe(audio, args.model, args.language,
-                          condition_on_previous_text=False)
+                          condition_on_previous_text=False,
+                          timestamps=args.timestamps)
         result["pass"] = 1
         _output(result, args)
 
@@ -137,7 +158,8 @@ def main():
         print(f"Prompt: {prompt[:100]}...", file=sys.stderr)
         result = transcribe(audio, args.model, args.language,
                           initial_prompt=prompt,
-                          condition_on_previous_text=True)
+                          condition_on_previous_text=True,
+                          timestamps=args.timestamps)
         result["pass"] = 2
         result["initial_prompt"] = prompt
         _output(result, args)
@@ -146,7 +168,8 @@ def main():
         # Auto: Pass 1, print draft for LLM, read prompt from stdin, Pass 2
         print("=== Pass 1: Draft transcription ===", file=sys.stderr)
         r1 = transcribe(audio, args.model, args.language,
-                       condition_on_previous_text=False)
+                       condition_on_previous_text=False,
+                       timestamps=args.timestamps)
 
         # Output pass 1 result for LLM consumption
         print("\n--- PASS 1 DRAFT ---", file=sys.stderr)
@@ -175,27 +198,53 @@ def main():
         print(f"Prompt: {prompt[:100]}...", file=sys.stderr)
         r2 = transcribe(audio, args.model, args.language,
                        initial_prompt=prompt,
-                       condition_on_previous_text=True)
+                       condition_on_previous_text=True,
+                       timestamps=args.timestamps)
         r2["pass"] = 2
         r2["initial_prompt"] = prompt
         _output(r2, args)
 
 
+def _format_srt_time(seconds):
+    """Convert seconds to SRT timestamp format (HH:MM:SS,mmm)."""
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = int(seconds % 60)
+    ms = int((seconds % 1) * 1000)
+    return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
+
+
+def _to_srt(result):
+    """Convert result with segments to SRT format string."""
+    segments = result.get("segments", [])
+    if not segments:
+        return f"1\n00:00:00,000 --> 00:00:01,000\n{result['text']}\n"
+    lines = []
+    for i, seg in enumerate(segments, 1):
+        start = _format_srt_time(seg["start"])
+        end = _format_srt_time(seg["end"])
+        lines.append(f"{i}\n{start} --> {end}\n{seg['text']}\n")
+    return "\n".join(lines)
+
+
 def _output(result, args):
     """Write result to file or stdout."""
+    is_srt = args.srt or (args.output and args.output.endswith(".srt"))
+    content = None
+
+    if is_srt:
+        content = _to_srt(result)
+    elif args.json or (args.output and args.output.endswith(".json")):
+        content = json.dumps(result, ensure_ascii=False, indent=2)
+    else:
+        content = result["text"]
+
     if args.output:
         Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-        if args.output.endswith(".json") or args.json:
-            Path(args.output).write_text(
-                json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
-        else:
-            Path(args.output).write_text(result["text"], encoding="utf-8")
+        Path(args.output).write_text(content, encoding="utf-8")
         print(f"Saved: {args.output}", file=sys.stderr)
     else:
-        if args.json:
-            print(json.dumps(result, ensure_ascii=False, indent=2))
-        else:
-            print(result["text"])
+        print(content)
 
 
 if __name__ == "__main__":
