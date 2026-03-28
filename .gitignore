@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# macOS
+.DS_Store
+
+# Environment / Secrets
+.env
+*.env
+
+# Audio / Media
+*.wav
+*.mp3
+*.m4a
+*.mp4
+
+# Session data
+sessions/
+
+# Build artifacts
+*.skill
+
+# Logs
+firebase-debug.log
+*.log
+
+# Benchmark results
+*_results.json
+*_results.jsonl
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# PDF
+*.pdf
