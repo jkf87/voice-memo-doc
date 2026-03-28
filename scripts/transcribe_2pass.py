@@ -205,6 +205,15 @@ def main():
         _output(r2, args)
 
 
+def _format_time(seconds):
+    """Convert seconds to HH:MM:SS.mm format."""
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = int(seconds % 60)
+    cs = int((seconds % 1) * 100)
+    return f"{h:02d}:{m:02d}:{s:02d}.{cs:02d}"
+
+
 def _format_srt_time(seconds):
     """Convert seconds to SRT timestamp format (HH:MM:SS,mmm)."""
     h = int(seconds // 3600)
@@ -212,6 +221,25 @@ def _format_srt_time(seconds):
     s = int(seconds % 60)
     ms = int((seconds % 1) * 1000)
     return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
+
+
+def _to_md(result, title=None):
+    """Convert result with segments to timecoded markdown format.
+    Format: [HH:MM:SS.mm - HH:MM:SS.mm] text"""
+    if not title:
+        text = result.get("text", "")
+        title = text[:30].strip().rstrip(".,!?") if text else "Transcript"
+    segments = result.get("segments", [])
+    lines = [title, ""]
+    if not segments:
+        lines.append(result["text"])
+    else:
+        for seg in segments:
+            start = _format_time(seg["start"])
+            end = _format_time(seg["end"])
+            lines.append(f"[{start} - {end}] {seg['text']}")
+    lines.append("")
+    return "\n".join(lines)
 
 
 def _to_srt(result):
@@ -230,12 +258,17 @@ def _to_srt(result):
 def _output(result, args):
     """Write result to file or stdout."""
     is_srt = args.srt or (args.output and args.output.endswith(".srt"))
-    content = None
+    is_md = args.output and args.output.endswith(".md")
 
     if is_srt:
         content = _to_srt(result)
+    elif is_md and result.get("segments"):
+        title = Path(args.output).stem.replace("_", " ")
+        content = _to_md(result, title=title)
     elif args.json or (args.output and args.output.endswith(".json")):
         content = json.dumps(result, ensure_ascii=False, indent=2)
+    elif args.timestamps and result.get("segments"):
+        content = _to_md(result)
     else:
         content = result["text"]
 
