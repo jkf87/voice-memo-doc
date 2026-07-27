@@ -27,7 +27,11 @@ from pathlib import Path
 import numpy as np
 import soundfile as sf
 
-DEFAULT_MODEL = "mlx-community/whisper-turbo"
+try:
+    from .model_options import DEFAULT_MODEL, MODELS, resolve_model
+except ImportError:
+    from model_options import DEFAULT_MODEL, MODELS, resolve_model
+
 SAMPLE_RATE = 16000
 
 
@@ -64,6 +68,7 @@ def transcribe(audio, model=DEFAULT_MODEL, language="auto", initial_prompt=None,
     """Run Whisper MLX transcription."""
     from mlx_whisper import transcribe as mlx_transcribe
 
+    model_path = resolve_model(model)
     kwargs = {}
     if language and language != "auto":
         kwargs["language"] = language
@@ -75,7 +80,7 @@ def transcribe(audio, model=DEFAULT_MODEL, language="auto", initial_prompt=None,
     t0 = time.time()
     result = mlx_transcribe(
         audio,
-        path_or_hf_repo=model,
+        path_or_hf_repo=model_path,
         verbose=False,
         condition_on_previous_text=condition_on_previous_text,
         no_speech_threshold=0.6,
@@ -95,7 +100,7 @@ def transcribe(audio, model=DEFAULT_MODEL, language="auto", initial_prompt=None,
         "duration_sec": round(duration, 1),
         "elapsed_sec": round(elapsed, 1),
         "rtf": round(duration / elapsed, 1) if elapsed > 0 else 0,
-        "model": model,
+        "model": model_path,
     }
 
     if timestamps and "segments" in result:
@@ -121,7 +126,11 @@ def main():
                        help="Initial prompt for pass 2 (domain terms, entities)")
     parser.add_argument("--prompt-file", default=None,
                        help="Read initial prompt from file")
-    parser.add_argument("--model", "-m", default=DEFAULT_MODEL, help="Whisper model")
+    parser.add_argument(
+        "--model", "-m",
+        default=DEFAULT_MODEL,
+        help=f"Whisper model (default: {DEFAULT_MODEL}). Aliases: {', '.join(MODELS)}",
+    )
     parser.add_argument("--language", "-l", default="auto", help="Language code")
     parser.add_argument("--output", "-o", default=None, help="Output file (json, txt, or srt)")
     parser.add_argument("--json", action="store_true", help="JSON output")

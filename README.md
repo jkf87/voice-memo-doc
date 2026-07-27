@@ -64,7 +64,7 @@ AI 에이전트가 Step 2의 6-agent 역할을 수행합니다. 스크립트는 
 | CER | 16.2% | 14.8% | -8.6% |
 | WER | 29.5% | 27.2% | -7.8% |
 
-테스트: 8분 한국어 IT 튜토리얼 영상, whisper-turbo 모델
+테스트: 8분 한국어 IT 튜토리얼 영상, whisper-large-v3-turbo 모델
 
 ### Prompt Guidelines
 
@@ -87,19 +87,26 @@ AI 에이전트가 Step 2의 6-agent 역할을 수행합니다. 스크립트는 
 
 ## Models
 
-기본: `mlx-community/whisper-turbo` (809M, 정확도 우선)
+기본: `mlx-community/whisper-large-v3-turbo` (809M, 정확도 우선)
 
 ```bash
+# 고정확도 large-v3-turbo 모델을 명시적으로 선택
+python3 scripts/transcribe_2pass.py --input audio.wav --pass 1 \
+  --model large-v3-turbo --language ko
+
 # 저사양 Mac에서 small 모델 사용
-python3 scripts/transcribe_2pass.py --input audio.wav --pass 1 --model mlx-community/whisper-small-mlx
+python3 scripts/transcribe_2pass.py --input audio.wav --pass 1 --model small
 ```
+
+두 전사 스크립트 모두 `turbo`, `large-v3`, `large-v3-turbo`, `small`, `base`
+단축 이름과 전체 Hugging Face 모델 경로를 지원합니다.
 
 ## Requirements
 
 - Apple Silicon Mac (M1+)
 - Python 3.9+
 - macOS 13+
-- Disk: ~1.5GB (turbo model cache)
+- Disk: ~1.6GB (large-v3-turbo model cache)
 
 ## References
 

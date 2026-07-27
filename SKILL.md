@@ -108,18 +108,26 @@ Critical rules for generating the initial_prompt (from paper findings):
 
 ## Models
 
-기본 모델: `mlx-community/whisper-turbo` (809M, ~1.5GB VRAM)
+기본 모델: `mlx-community/whisper-large-v3-turbo` (809M, ~1.6GB)
 
 | Model | Size | Speed | Accuracy | Use Case |
 |-------|------|-------|----------|----------|
-| `mlx-community/whisper-turbo` | 809M | ~1s/3s chunk | Best | 기본 (권장) |
-| `mlx-community/whisper-small-mlx` | 244M | ~0.3s/3s chunk | Good | 저사양 Mac |
+| `large-v3-turbo` | 809M | ~1s/3s chunk | Best | 기본 (권장) |
+| `turbo` | 809M | ~1s/3s chunk | Best | 호환 별칭 |
+| `large-v3` | 1.55B | 느림 | Best | 최대 모델 |
+| `small` | 244M | ~0.3s/3s chunk | Good | 저사양 Mac |
+| `base` | 74M | 가장 빠름 | Basic | 최소 사양 |
 
-모델 변경: `--model mlx-community/whisper-small-mlx`
+두 전사 스크립트 모두 단축 이름과 전체 Hugging Face 모델 경로를 지원합니다.
+
+```bash
+python3 scripts/transcribe_2pass.py --input audio.wav --pass 1 \
+  --model large-v3-turbo --language ko
+```
 
 ## Requirements
 
 - Apple Silicon Mac (M1/M2/M3/M4)
 - Python 3.9+
 - `mlx-whisper`, `sounddevice`, `soundfile`, `portaudio`
-- Disk: ~1.5GB (turbo model cache)
+- Disk: ~1.6GB (large-v3-turbo model cache)
