@@ -14,15 +14,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-# 모델 단축 이름 → HuggingFace 경로
-MODELS = {
-    "turbo": "mlx-community/whisper-turbo",
-    "large-v3": "mlx-community/whisper-large-v3-mlx",
-    "large-v3-turbo": "mlx-community/whisper-large-v3-turbo",
-    "small": "mlx-community/whisper-small-mlx",
-    "base": "mlx-community/whisper-base-mlx",
-}
-DEFAULT_MODEL = "mlx-community/whisper-large-v3-turbo"
+try:
+    from .model_options import DEFAULT_MODEL, MODELS, resolve_model
+except ImportError:
+    from model_options import DEFAULT_MODEL, MODELS, resolve_model
 
 MLX_WHISPER_CMD = "mlx_whisper"
 
@@ -43,13 +38,6 @@ def check_dependencies():
         print("mlx_whisper CLI가 설치되어 있지 않습니다.")
         print("설치: uv tool install mlx-whisper")
         sys.exit(1)
-
-
-def resolve_model(model_name: str) -> str:
-    """모델 단축 이름을 HuggingFace 경로로 변환"""
-    if model_name in MODELS:
-        return MODELS[model_name]
-    return model_name
 
 
 def transcribe_audio(

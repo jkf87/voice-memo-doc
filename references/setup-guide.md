@@ -41,9 +41,9 @@ brew install blackhole-2ch
 
 | 모델명 | HuggingFace 경로 | 크기 | 속도 |
 |--------|------------------|------|------|
-| `turbo` (기본) | mlx-community/whisper-turbo | ~1.5GB | 매우 빠름 |
+| `large-v3-turbo` (기본) | mlx-community/whisper-large-v3-turbo | ~1.6GB | 빠름+정확 |
+| `turbo` | mlx-community/whisper-turbo | ~1.5GB | 매우 빠름 |
 | `large-v3` | mlx-community/whisper-large-v3-mlx | ~3GB | 높은 정확도 |
-| `large-v3-turbo` | mlx-community/whisper-large-v3-turbo | ~1.6GB | 빠름+정확 |
 | `small` | mlx-community/whisper-small-mlx | ~500MB | 빠름 |
 | `base` | mlx-community/whisper-base-mlx | ~150MB | 가장 빠름 |
 
