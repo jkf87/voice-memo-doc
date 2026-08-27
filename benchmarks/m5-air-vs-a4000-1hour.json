@@ -1,0 +1,31 @@
+{
+  "input": "test-korean-1hour.ogg",
+  "input_sha256": "95a4a12c298638c5fc887a12ca837618f094a5644f17d5796427b4f7577d244a",
+  "results": [
+    {
+      "language": "ko",
+      "duration_sec": 3600.0,
+      "elapsed_sec": 185.0,
+      "rtf": 19.5,
+      "model": "mlx-community/whisper-large-v3-turbo",
+      "backend": "mlx",
+      "text_characters": 28999,
+      "text_sha256": "41702d2de2adb1eade06a293d4b930849e038b0074df51e9e889341aa309115b",
+      "segment_count": 0
+    },
+    {
+      "language": "ko",
+      "duration_sec": 3600.0,
+      "elapsed_sec": 92.821,
+      "server_elapsed_sec": 91.678,
+      "rtf": 38.78,
+      "backend": "cuda-api",
+      "model": "whisper-large-v3-turbo",
+      "device": "cuda",
+      "compute_type": "int8_float16",
+      "text_characters": 29133,
+      "text_sha256": "8f0e420af6f3e64c80c46a12ee13371c22d986fdd29b37ad0d3631f1255a00cd",
+      "segment_count": 533
+    }
+  ]
+}
